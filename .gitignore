@@ -1,0 +1,22 @@
+# Build outputs
+build/
+bin/
+out/
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+
+# Visual Studio / IDE
+.vs/
+.vscode/
+CMakeSettings.json
+*.user
+
+# Generated telemetry outputs (preserve directory via .gitkeep)
+output/*.csv
+!output/.gitkeep
+
+# macOS metadata
+.DS_Store

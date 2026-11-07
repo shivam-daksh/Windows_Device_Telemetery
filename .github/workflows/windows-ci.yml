@@ -1,0 +1,48 @@
+name: Windows Native C++ CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    name: Build & Verify (Windows x64 / MSVC)
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -A x64
+
+      - name: Build Project (Release)
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Run CTest Unit Tests
+        run: |
+          ctest --test-dir build -C Release --output-on-failure
+
+      - name: Execute Binary Self-Test
+        shell: pwsh
+        run: |
+          Write-Host "[*] Testing --version"
+          .\build\Release\device_telemetry.exe --version
+
+          Write-Host "[*] Testing --help"
+          .\build\Release\device_telemetry.exe --help
+
+          Write-Host "[*] Executing 2-second telemetry run..."
+          .\build\Release\device_telemetry.exe --interval-ms 250 --duration-seconds 2 --output-dir ci_output --top-processes 10
+
+          if (-not (Test-Path "ci_output/system_metrics.csv")) {
+              throw "Expected ci_output/system_metrics.csv was not generated."
+          }
+          if (-not (Test-Path "ci_output/process_metrics.csv")) {
+              throw "Expected ci_output/process_metrics.csv was not generated."
+          }
+          Write-Host "[+] Telemetry output CSVs validated successfully in CI environment."
